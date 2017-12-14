@@ -8,6 +8,11 @@ import (
 	"github.com/google/go-querystring/query"
 )
 
+// APIKey contains the api key required for every request
+// to the news api. Gets added to the query string if its
+// not already included.
+var APIKey string
+
 // Exception is a representation of a news exception.
 type Exception struct {
 	Code    string `json:"code"` // Error Code
@@ -23,12 +28,15 @@ func (e *Exception) Error() string {
 }
 
 var (
-	myClient = &http.Client{Timeout: 10 * time.Second}
+	// HTTPClient is the http client that is used for every
+	// request. If you want to have a different timeout
+	// overwrite the variable before using it.
+	HTTPClient = &http.Client{Timeout: 10 * time.Second}
 )
 
 // getJSON is fetching json from an api endpoint.
 func getJSON(url string, target interface{}) error {
-	r, err := myClient.Get(url)
+	r, err := HTTPClient.Get(url)
 	if err != nil {
 		return err
 	}

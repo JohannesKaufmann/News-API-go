@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"log"
+	"net/http"
 	"os"
+	"time"
 
 	news "github.com/JohannesKaufmann/News-API-go"
 )
@@ -18,14 +20,16 @@ func main() {
 		log.Fatal("error: the environment variable NEWS_API_KEY needs to be set.")
 	}
 
+	news.APIKey = apiKey
+
 	sources()
 	topHeadlines()
 	everything()
 }
 func everything() {
 	opt := news.EverythingOptions{
-		APIKey: apiKey,
-		Query:  "bitcoin",
+		// APIKey: apiKey,
+		Query: "bitcoin",
 	}
 
 	everything, err := news.Everything(opt)
@@ -38,7 +42,7 @@ func everything() {
 }
 func topHeadlines() {
 	opt := news.TopHeadlinesOptions{
-		APIKey: apiKey,
+		// APIKey: apiKey,
 		Sources: []string{
 			"bbc-news",
 		},
@@ -53,8 +57,10 @@ func topHeadlines() {
 	fmt.Println("headlines[0]: ", headlines[0])
 }
 func sources() {
+	news.HTTPClient = &http.Client{Timeout: 1 * time.Second}
+
 	opt := news.SourcesOptions{
-		APIKey: apiKey,
+	// APIKey: apiKey,
 	}
 
 	sources, err := news.Sources(opt)

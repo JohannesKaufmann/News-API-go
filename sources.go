@@ -37,6 +37,10 @@ func Sources(opt SourcesOptions) ([]Source, *Exception) {
 	// the base url
 	url := "https://newsapi.org/v2/sources"
 
+	if opt.APIKey == "" && APIKey != "" {
+		opt.APIKey = APIKey
+	}
+
 	res, err := fetch(url, opt)
 
 	return res.Sources, err

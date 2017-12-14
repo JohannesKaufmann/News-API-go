@@ -54,6 +54,10 @@ func TopHeadlines(opt TopHeadlinesOptions) ([]Article, *Exception) {
 	// the base url
 	url := "https://newsapi.org/v2/top-headlines"
 
+	if opt.APIKey == "" && APIKey != "" {
+		opt.APIKey = APIKey
+	}
+
 	res, err := fetch(url, opt)
 
 	return res.Articles, err
