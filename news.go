@@ -3,6 +3,7 @@ package news
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -13,6 +14,10 @@ import (
 // to the news api. Gets added to the query string if its
 // not already included.
 var APIKey string
+
+// Headers contains the request headers.
+// for example "User-Agent": "Golang Client"
+var Headers map[string]string
 
 // Exception is a representation of a news exception.
 type Exception struct {
@@ -36,14 +41,26 @@ var (
 )
 
 // getJSON is fetching json from an api endpoint.
-func getJSON(url string, target interface{}) error {
-	r, err := HTTPClient.Get(url)
+func getJSON(url string, target interface{}, headers map[string]string) (http.Header, error) {
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	defer r.Body.Close()
 
-	return json.NewDecoder(r.Body).Decode(target)
+	// adding the headers that the user specified to the request
+	for key, value := range headers {
+		req.Header.Set(key, value)
+	}
+
+	resp, err := HTTPClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+	err = json.NewDecoder(resp.Body).Decode(target)
+
+	return resp.Header, err
 }
 
 // networkResult is the standard result from the rest api.
@@ -61,13 +78,34 @@ type networkResult struct {
 	Sources []Source `json:"sources"`
 }
 
-func fetch(url string, opt interface{}) (networkResult, *Exception) {
+// ResponseInfo contains more information about the response
+// like wether the request got cached or the nmuber of
+// total articles.
+type ResponseInfo struct {
+	// INPUT
+	ForceFreshData bool
+
+	// wether the response is cached
+	Cached bool
+
+	// when the result will expire.
+	Expires   string
+	Remaining string
+
+	// the date of the originally request that was then cached
+	Date string
+
+	TotalResults int
+}
+
+func fetch(url string, opt interface{}, forceFreshData bool) (networkResult, *ResponseInfo, *Exception) {
 	var res networkResult
+	reqHeaders := Headers
 
 	// convert the options struct to a query parameter string
 	v, err := query.Values(opt)
 	if err != nil {
-		return res, &Exception{
+		return res, nil, &Exception{
 			Code:    "[assembling query string]",
 			Message: err.Error(),
 		}
@@ -76,21 +114,47 @@ func fetch(url string, opt interface{}) (networkResult, *Exception) {
 	// attach the query parameter to the url
 	url = url + "?" + v.Encode()
 
-	fmt.Println(url)
+	// it the user specified that the cache should be circumvented
+	// the header is added according to: https://newsapi.org/docs/caching
+	if forceFreshData {
+		reqHeaders["X-No-Cache"] = "true"
+	}
 
-	err = getJSON(url, &res)
+	headers, err := getJSON(url, &res, reqHeaders)
 	if err != nil {
-		return res, &Exception{
+		return res, nil, &Exception{
 			Code:    "[requesting json]",
 			Message: err.Error(),
 		}
 	}
 	if res.Status != "ok" {
-		return res, &Exception{
+		return res, nil, &Exception{
 			Code:    res.Code,
 			Message: res.Message,
 		}
 	}
 
-	return res, nil
+	isCached := headers.Get("X-Cached-Result") == "true"
+	expires := headers.Get("X-Cache-Expires")
+	remaining := headers.Get("X-Cache-Remaining")
+	date := headers.Get("Date")
+
+	if forceFreshData && isCached {
+		log.Println("[news api] warning: you wanted fresh data but the api still returned cached data.")
+	}
+	if !forceFreshData && !isCached {
+		log.Println("[DEBUG news api] info: you got fresh data although you did not want it.")
+	}
+
+	info := &ResponseInfo{
+		ForceFreshData: forceFreshData,
+
+		Cached:    isCached,
+		Expires:   expires,
+		Remaining: remaining,
+		Date:      date,
+	}
+	fmt.Printf("%+v", info)
+
+	return res, info, nil
 }

@@ -21,9 +21,18 @@ func main() {
 	}
 
 	news.APIKey = apiKey
+	news.HTTPClient = &http.Client{Timeout: 10 * time.Second}
+	news.Headers = map[string]string{
+		"User-Agent": "Golang Client",
+	}
 
+	fmt.Println("\n - - sources - - ")
 	sources()
+
+	fmt.Println("\n - - top headlines - - ")
 	topHeadlines()
+
+	fmt.Println("\n - - everything - - ")
 	everything()
 }
 func everything() {
@@ -32,12 +41,12 @@ func everything() {
 		Query: "bitcoin",
 	}
 
-	everything, total, err := news.Everything(opt)
+	everything, info, err := news.Everything(opt)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 
-	fmt.Println("\neverything length: ", len(everything), "/", total)
+	fmt.Println("\neverything length: ", len(everything), "/", info.TotalResults)
 	fmt.Printf("everything[0]: %+v\n", everything[0])
 }
 func topHeadlines() {
@@ -49,26 +58,24 @@ func topHeadlines() {
 		},
 	}
 
-	headlines, total, err := news.TopHeadlines(opt)
+	headlines, info, err := news.TopHeadlines(opt)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Println("\nheadlines length: ", len(headlines), "/", total)
+	fmt.Println("\nheadlines length: ", len(headlines), "/", info.TotalResults)
 	fmt.Printf("headlines[0]: %+v\n", headlines[0])
 }
 func sources() {
-	news.HTTPClient = &http.Client{Timeout: 1 * time.Second}
-
 	opt := news.SourcesOptions{
-	// APIKey: apiKey,
+		ForceFreshData: true,
 	}
 
-	sources, total, err := news.Sources(opt)
+	sources, info, err := news.Sources(opt)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Println("\nsources length: ", len(sources), "/", total)
+	fmt.Println("\nsources length: ", len(sources), "/", info.TotalResults)
 	fmt.Printf("sources[0]: %+v\n", sources[0])
 }

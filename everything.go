@@ -25,7 +25,7 @@ type EverythingOptions struct {
 //
 // This endpoint suits article discovery and analysis, but can be
 // used to retrieve articles for display, too.
-func Everything(opt EverythingOptions) ([]Article, int, *Exception) {
+func Everything(opt EverythingOptions) ([]Article, *ResponseInfo, *Exception) {
 	// the base url
 	url := "https://newsapi.org/v2/everything"
 
@@ -33,7 +33,10 @@ func Everything(opt EverythingOptions) ([]Article, int, *Exception) {
 		opt.APIKey = APIKey
 	}
 
-	res, err := fetch(url, opt)
+	res, info, err := fetch(url, opt, false)
+	if info != nil {
+		info.TotalResults = res.TotalResults
+	}
 
-	return res.Articles, res.TotalResults, err
+	return res.Articles, info, err
 }

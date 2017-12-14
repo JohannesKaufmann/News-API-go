@@ -50,7 +50,7 @@ type TopHeadlinesOptions struct {
 // appear on the source's page (top to bottom).
 // 		This endpoint is great for retrieving headlines for display
 // 		on news tickers or similar.
-func TopHeadlines(opt TopHeadlinesOptions) ([]Article, int, *Exception) {
+func TopHeadlines(opt TopHeadlinesOptions) ([]Article, *ResponseInfo, *Exception) {
 	// the base url
 	url := "https://newsapi.org/v2/top-headlines"
 
@@ -58,7 +58,10 @@ func TopHeadlines(opt TopHeadlinesOptions) ([]Article, int, *Exception) {
 		opt.APIKey = APIKey
 	}
 
-	res, err := fetch(url, opt)
+	res, info, err := fetch(url, opt, false)
+	if info != nil {
+		info.TotalResults = res.TotalResults
+	}
 
-	return res.Articles, res.TotalResults, err
+	return res.Articles, info, err
 }

@@ -15,6 +15,11 @@ type Source struct {
 // to the rest api. It gets converted to a query string and added
 // to the url.
 type SourcesOptions struct {
+	// if 'true' the header `X-No-Cache = true` will be added to
+	// the request. Default: false (use cache)
+	// -> https://newsapi.org/docs/caching
+	ForceFreshData bool `url:"-"` // TODO: better name
+
 	Category string `url:"category"`
 	Language string `url:"language"`
 	Country  string `url:"country"`
@@ -26,7 +31,7 @@ type SourcesOptions struct {
 // mainly a convenience endpoint that you can use to keep
 // track of the publishers available on the API, and you
 // can pipe it straight through to your users.
-func Sources(opt SourcesOptions) ([]Source, int, *Exception) {
+func Sources(opt SourcesOptions) ([]Source, *ResponseInfo, *Exception) {
 	// the base url
 	url := "https://newsapi.org/v2/sources"
 
@@ -34,10 +39,14 @@ func Sources(opt SourcesOptions) ([]Source, int, *Exception) {
 		opt.APIKey = APIKey
 	}
 
-	res, err := fetch(url, opt)
+	res, info, err := fetch(url, opt, opt.ForceFreshData)
 
 	// the response does not contain `res.TotalResults` so
 	// I am setting it to the length of the array to
 	// provided the same api to the user.
-	return res.Sources, len(res.Sources), err
+	if info != nil {
+		info.TotalResults = len(res.Sources)
+	}
+
+	return res.Sources, info, err
 }
