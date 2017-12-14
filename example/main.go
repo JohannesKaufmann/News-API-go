@@ -32,29 +32,30 @@ func everything() {
 		Query: "bitcoin",
 	}
 
-	everything, err := news.Everything(opt)
+	everything, total, err := news.Everything(opt)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 
-	fmt.Println("\neverything length: ", len(everything))
-	fmt.Println("everything[0]: ", everything[0])
+	fmt.Println("\neverything length: ", len(everything), "/", total)
+	fmt.Printf("everything[0]: %+v\n", everything[0])
 }
 func topHeadlines() {
 	opt := news.TopHeadlinesOptions{
 		// APIKey: apiKey,
 		Sources: []string{
 			"bbc-news",
+			"techcrunch",
 		},
 	}
 
-	headlines, err := news.TopHeadlines(opt)
+	headlines, total, err := news.TopHeadlines(opt)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Println("\nheadlines length: ", len(headlines))
-	fmt.Println("headlines[0]: ", headlines[0])
+	fmt.Println("\nheadlines length: ", len(headlines), "/", total)
+	fmt.Printf("headlines[0]: %+v\n", headlines[0])
 }
 func sources() {
 	news.HTTPClient = &http.Client{Timeout: 1 * time.Second}
@@ -63,11 +64,11 @@ func sources() {
 	// APIKey: apiKey,
 	}
 
-	sources, err := news.Sources(opt)
+	sources, total, err := news.Sources(opt)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Println("\nsources length: ", len(sources))
-	fmt.Println("sources[0]: ", sources[0])
+	fmt.Println("\nsources length: ", len(sources), "/", total)
+	fmt.Printf("sources[0]: %+v\n", sources[0])
 }

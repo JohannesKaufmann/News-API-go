@@ -2,6 +2,7 @@ package news
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -75,6 +76,8 @@ func fetch(url string, opt interface{}) (networkResult, *Exception) {
 	// attach the query parameter to the url
 	url = url + "?" + v.Encode()
 
+	fmt.Println(url)
+
 	err = getJSON(url, &res)
 	if err != nil {
 		return res, &Exception{
@@ -82,7 +85,7 @@ func fetch(url string, opt interface{}) (networkResult, *Exception) {
 			Message: err.Error(),
 		}
 	}
-	if res.Status == "error" {
+	if res.Status != "ok" {
 		return res, &Exception{
 			Code:    res.Code,
 			Message: res.Message,

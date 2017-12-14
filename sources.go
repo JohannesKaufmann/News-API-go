@@ -11,13 +11,6 @@ type Source struct {
 	Country     string `json:"country"`
 }
 
-// type sourcesResponse struct {
-// 	Status  string   `json:"status"`
-// 	Code    string   `json:"code"` // for example: "apiKeyInvalid"
-// 	Message string   `json:"message"`
-// 	Sources []Source `json:"sources"`
-// }
-
 // SourcesOptions contains the options that can be passed
 // to the rest api. It gets converted to a query string and added
 // to the url.
@@ -33,7 +26,7 @@ type SourcesOptions struct {
 // mainly a convenience endpoint that you can use to keep
 // track of the publishers available on the API, and you
 // can pipe it straight through to your users.
-func Sources(opt SourcesOptions) ([]Source, *Exception) {
+func Sources(opt SourcesOptions) ([]Source, int, *Exception) {
 	// the base url
 	url := "https://newsapi.org/v2/sources"
 
@@ -43,5 +36,8 @@ func Sources(opt SourcesOptions) ([]Source, *Exception) {
 
 	res, err := fetch(url, opt)
 
-	return res.Sources, err
+	// the response does not contain `res.TotalResults` so
+	// I am setting it to the length of the array to
+	// provided the same api to the user.
+	return res.Sources, len(res.Sources), err
 }
