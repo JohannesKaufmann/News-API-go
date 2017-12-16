@@ -100,7 +100,19 @@ type ResponseInfo struct {
 
 func fetch(url string, opt interface{}, forceFreshData bool) (networkResult, *ResponseInfo, *Exception) {
 	var res networkResult
-	reqHeaders := Headers
+
+	// copy the values from the map over into the new one.
+	// -> https://stackoverflow.com/a/23058707
+	reqHeaders := make(map[string]string)
+	for k, v := range Headers {
+		reqHeaders[k] = v
+	}
+
+	// it the user specified that the cache should be circumvented
+	// the header is added according to: https://newsapi.org/docs/caching
+	if forceFreshData {
+		reqHeaders["X-No-Cache"] = "true"
+	}
 
 	// convert the options struct to a query parameter string
 	v, err := query.Values(opt)
@@ -113,12 +125,6 @@ func fetch(url string, opt interface{}, forceFreshData bool) (networkResult, *Re
 
 	// attach the query parameter to the url
 	url = url + "?" + v.Encode()
-
-	// it the user specified that the cache should be circumvented
-	// the header is added according to: https://newsapi.org/docs/caching
-	if forceFreshData {
-		reqHeaders["X-No-Cache"] = "true"
-	}
 
 	headers, err := getJSON(url, &res, reqHeaders)
 	if err != nil {
