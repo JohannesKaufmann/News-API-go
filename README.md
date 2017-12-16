@@ -21,6 +21,8 @@ Make sure that you have an Api Key ready. I would recommend passing it as an env
 package main
 
 import (
+  "fmt"
+  "log"
   news "github.com/News-API-gh/News-API-go"
 )
 
@@ -46,6 +48,8 @@ func main() {
 package main
 
 import (
+  "fmt"
+  "log"
   news "github.com/News-API-gh/News-API-go"
 )
 
@@ -74,6 +78,8 @@ func main() {
 package main
 
 import (
+  "fmt"
+  "log"
   news "github.com/News-API-gh/News-API-go"
 )
 
@@ -101,6 +107,8 @@ You can also set the api key globally. This way you don't need to pass it to eve
 package main
 
 import (
+  "fmt"
+  "log"
   news "github.com/News-API-gh/News-API-go"
 )
 
@@ -118,23 +126,23 @@ func init() {
 ### Disabling the Cache
 
 ```golang
-  opt := news.SourcesOptions{
-    // if `ForceFreshData` is set to true the header
-    // `X-No-Cache = true` is added to the request.
-    ForceFreshData: true,
-  }
+opt := news.SourcesOptions{
+  // if `ForceFreshData` is set to true the header
+  // `X-No-Cache = true` is added to the request.
+  ForceFreshData: true,
+}
 
-  sources, info, err := news.Sources(opt)
-  if err != nil {
-    log.Fatal(err)
-  }
+sources, info, err := news.Sources(opt)
+if err != nil {
+  log.Fatal(err)
+}
 
-  // The info struct always contains information about the caching
-  // even if `ForceFreshData` is set to `false`.
-  fmt.Println(info.Cached, info.Expires, info.Remaining, info.Date)
+// The info struct always contains information about the caching
+// even if `ForceFreshData` is set to `false`.
+fmt.Println(info.Cached, info.Expires, info.Remaining, info.Date)
 
-  fmt.Println(len(sources), "/", info.TotalResults)
-  fmt.Printf("sources[0]: %+v\n", sources[0])
+fmt.Println(len(sources), "/", info.TotalResults)
+fmt.Printf("sources[0]: %+v\n", sources[0])
 ```
 
 ### Adding custom Headers and changing the Http Client
@@ -143,6 +151,9 @@ func init() {
 package main
 
 import (
+  "net/http"
+  "os"
+  "time"
   news "github.com/News-API-gh/News-API-go"
 )
 
