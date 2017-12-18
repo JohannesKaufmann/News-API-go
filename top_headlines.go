@@ -23,6 +23,11 @@ type Article struct {
 // to the rest api. It gets converted to a query string and added
 // to the url.
 type TopHeadlinesOptions struct {
+	// if 'true' the header `X-No-Cache = true` will be added to
+	// the request. Default: false (use cache)
+	// -> https://newsapi.org/docs/caching
+	ForceFreshData bool `url:"-"`
+
 	// A comma-seperated string of identifiers (maximum 20) for the
 	// news sources or blogs you want headlines from. Use the
 	// '/sources' endpoint to locate these programmatically or look at the sources index.
@@ -58,7 +63,7 @@ func TopHeadlines(opt TopHeadlinesOptions) ([]Article, *ResponseInfo, *Exception
 		opt.APIKey = APIKey
 	}
 
-	res, info, err := fetch(url, opt, false)
+	res, info, err := fetch(url, opt, opt.ForceFreshData)
 	if info != nil {
 		info.TotalResults = res.TotalResults
 	}

@@ -2,6 +2,7 @@ package news
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -33,18 +34,28 @@ func (e *Exception) Error() string {
 	return e.Code + ": " + e.Message
 }
 
+type httpClient interface {
+	Do(req *http.Request) (*http.Response, error)
+}
+
 var (
+	// Timeout is the variable used in the http client. It configures
+	// after what timeframe the request should be abandoned.
+	Timeout = 10 * time.Second
+
 	// HTTPClient is the http client that is used for every
 	// request. If you want to have a different timeout
 	// overwrite the variable before using it.
-	HTTPClient = &http.Client{Timeout: 10 * time.Second}
+	HTTPClient httpClient = &http.Client{Timeout: Timeout}
 )
 
 // getJSON is fetching json from an api endpoint.
 func getJSON(url string, target interface{}, headers map[string]string) (http.Header, error) {
+	fmt.Println(url)
+
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return nil, err
+		return nil, errors.New("[new request] " + err.Error())
 	}
 
 	// adding the headers that the user specified to the request
@@ -55,6 +66,15 @@ func getJSON(url string, target interface{}, headers map[string]string) (http.He
 	resp, err := HTTPClient.Do(req)
 	if err != nil {
 		return nil, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		e := fmt.Sprint("status code ", resp.StatusCode, " != 200")
+		return nil, errors.New(e)
+	}
+
+	if resp.Body == nil {
+		return nil, errors.New("the response body is nil")
 	}
 
 	defer resp.Body.Close()
@@ -148,9 +168,9 @@ func fetch(url string, opt interface{}, forceFreshData bool) (networkResult, *Re
 	if forceFreshData && isCached {
 		log.Println("[news api] warning: you wanted fresh data but the api still returned cached data.")
 	}
-	if !forceFreshData && !isCached {
-		log.Println("[DEBUG news api] info: you got fresh data although you did not want it.")
-	}
+	// if !forceFreshData && !isCached {
+	// 	log.Println("[DEBUG news api] info: you got fresh data although you did not want it.")
+	// }
 
 	info := &ResponseInfo{
 		ForceFreshData: forceFreshData,
@@ -160,7 +180,7 @@ func fetch(url string, opt interface{}, forceFreshData bool) (networkResult, *Re
 		Remaining: remaining,
 		Date:      date,
 	}
-	fmt.Printf("%+v", info)
+	// fmt.Printf("%+v", info)
 
 	return res, info, nil
 }

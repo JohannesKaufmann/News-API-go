@@ -168,6 +168,7 @@ func init() {
 ## TODO
 
 * [ ] more tests
+* [ ] Rename `TopHeadlines`, ... to `GetTopHeadlines`, ...
 
 ---
 

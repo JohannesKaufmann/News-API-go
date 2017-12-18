@@ -4,6 +4,11 @@ package news
 // to the rest api. It gets converted to a query string and added
 // to the url.
 type EverythingOptions struct {
+	// if 'true' the header `X-No-Cache = true` will be added to
+	// the request. Default: false (use cache)
+	// -> https://newsapi.org/docs/caching
+	ForceFreshData bool `url:"-"`
+
 	Query string `url:"q"`
 
 	Sources []string `url:"sources"`
@@ -33,7 +38,7 @@ func Everything(opt EverythingOptions) ([]Article, *ResponseInfo, *Exception) {
 		opt.APIKey = APIKey
 	}
 
-	res, info, err := fetch(url, opt, false)
+	res, info, err := fetch(url, opt, opt.ForceFreshData)
 	if info != nil {
 		info.TotalResults = res.TotalResults
 	}
